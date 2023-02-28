@@ -1,4 +1,4 @@
-package db
+package data
 
 import "gorm.io/gorm"
 
@@ -15,13 +15,9 @@ type TradeMain struct {
 	PlatformCode  string `json:"platformCode"`  // 平台编码
 	PlatformName  string `json:"platformName"`  // 平台名称
 	Remark        string `json:"remark"`        // 备注
+	SendAddress
+	ReceiverAddress
 	gorm.Model
-}
-
-// Unit 一对多的关系单元
-type Unit struct {
-	UnitId   uint   `json:"unitId"`   //一对多的单元id
-	UnitName string `json:"unitName"` //一对多的单元名称
 }
 
 // TradeHasMany 订单一对多关系表
@@ -32,4 +28,38 @@ type TradeHasMany struct {
 	TypeName  string `json:"typeName"`  // 类型名称
 	Unit
 	gorm.Model
+}
+
+// PlatformTrade 平台订单
+type PlatformTrade struct {
+	Tid  string `json:"tid"`
+	Json string `json:"json"`
+	gorm.Model
+}
+
+// SendAddress 发货地址
+type SendAddress struct {
+	SendProvince string `json:"sendProvince"`
+	SendCity     string `json:"sendCity"`
+	SendDistinct string `json:"sendDistinct"`
+	SendTown     string `json:"sendTown"`
+	SendDetail   string `json:"sendDetail"`
+	SendCode     string `json:"sendCode"`
+}
+
+// ReceiverAddress 收货地址
+type ReceiverAddress struct {
+	ReceiverName     string `json:"receiverName"`
+	ReceiverProvince string `json:"receiverProvince"`
+	ReceiverCity     string `json:"receiverCity"`
+	ReceiverDistinct string `json:"receiverDistinct"`
+	ReceiverTown     string `json:"receiverTown"`
+	ReceiverDetail   string `json:"receiverDetail"`
+	ReceiverCode     string `json:"receiverCode"`
+}
+
+// Unit 一对多的关系单元
+type Unit struct {
+	UnitId   uint   `json:"unitId"`   //一对多的单元id
+	UnitName string `json:"unitName"` //一对多的单元名称
 }
