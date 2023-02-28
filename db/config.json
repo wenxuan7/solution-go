@@ -1,0 +1,8 @@
+{
+  "host": "localhost:3306",
+  "password": "wenxuan101314",
+  "user": "root",
+  "database": "raycloud_erp",
+  "maxIdleConns": 10,
+  "maxOpenConns": 100
+}
