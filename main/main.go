@@ -10,6 +10,7 @@ func main() {
 	var (
 		err    error
 		logger *zap.Logger
+		val    string
 	)
 
 	if logger, err = zap.NewProduction(); err != nil {
@@ -21,14 +22,13 @@ func main() {
 	db.ConnectMysql()
 	cache.ConnectRedis()
 
-	err = cache.Rdb.Set(cache.Ctx, "key", "value", 0).Err()
-	if err != nil {
+	if err = cache.Rdb.Set(cache.Ctx, "key", "value", 0).Err(); err != nil {
 		panic(err)
 	}
 
-	val, err := cache.Rdb.Get(cache.Ctx, "key").Result()
-	if err != nil {
+	if val, err = cache.Rdb.Get(cache.Ctx, "key").Result(); err != nil {
 		panic(err)
 	}
+
 	sugar.Infof("key -> %s", val)
 }
