@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"solution-go/cache"
 	"solution-go/db"
@@ -8,9 +9,10 @@ import (
 
 func main() {
 	var (
-		err    error
-		logger *zap.Logger
-		val    string
+		err       error
+		logger    *zap.Logger
+		val       string
+		statusCmd *redis.StatusCmd
 	)
 
 	if logger, err = zap.NewProduction(); err != nil {
@@ -22,7 +24,8 @@ func main() {
 	db.ConnectMysql()
 	cache.ConnectRedis()
 
-	if err = cache.Rdb.Set(cache.Ctx, "key", "value", 0).Err(); err != nil {
+	statusCmd = cache.Rdb.Set(cache.Ctx, "key", "value", 0)
+	if err = statusCmd.Err(); err != nil {
 		panic(err)
 	}
 
