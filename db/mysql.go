@@ -7,8 +7,13 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"os"
 	"time"
+)
+
+var (
+	MysqlDB *gorm.DB
 )
 
 type mysqlConfig struct {
@@ -23,7 +28,6 @@ type mysqlConfig struct {
 func ConnectMysql() {
 	var (
 		err       error
-		db        *gorm.DB
 		bs        []byte
 		dia       gorm.Dialector
 		mysqlPool *sql.DB
@@ -50,11 +54,18 @@ func ConnectMysql() {
 		SkipInitializeWithVersion: false, // 根据当前 MySQL 版本自动配置
 	})
 
-	if db, err = gorm.Open(dia, &gorm.Config{}); err != nil {
+	gConf := &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true, // 表名单数
+		},
+		CreateBatchSize: 100, // 批次创建最大值
+	}
+
+	if MysqlDB, err = gorm.Open(dia, gConf); err != nil {
 		panic(err)
 	}
 
-	if mysqlPool, err = db.DB(); err != nil {
+	if mysqlPool, err = MysqlDB.DB(); err != nil {
 		panic(err)
 	}
 	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.

@@ -20,6 +20,10 @@ type TradeMain struct {
 	gorm.Model
 }
 
+func (tm *TradeMain) TableName() string {
+	return "trade_main"
+}
+
 // TradeHasMany 订单一对多关系表
 type TradeHasMany struct {
 	Sid       uint   `json:"sid"`       // 订单号分布式id
@@ -30,11 +34,19 @@ type TradeHasMany struct {
 	gorm.Model
 }
 
+func (th *TradeHasMany) TableName() string {
+	return "trade_has_many"
+}
+
 // PlatformTrade 平台订单
 type PlatformTrade struct {
 	Tid  string `json:"tid"`
 	Json string `json:"json"`
 	gorm.Model
+}
+
+func (pt *PlatformTrade) TableName() string {
+	return "platform_trade"
 }
 
 // SendAddress 发货地址

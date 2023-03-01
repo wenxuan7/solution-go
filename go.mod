@@ -1,4 +1,4 @@
-module solution-go
+module github.com/solution-go
 
 go 1.20
 

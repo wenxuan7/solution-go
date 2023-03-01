@@ -1,10 +1,12 @@
 package main
 
 import (
+	jsoniter "github.com/json-iterator/go"
 	"github.com/redis/go-redis/v9"
+	"github.com/solution-go/cache"
+	"github.com/solution-go/data"
+	"github.com/solution-go/db"
 	"go.uber.org/zap"
-	"solution-go/cache"
-	"solution-go/db"
 )
 
 func main() {
@@ -13,6 +15,8 @@ func main() {
 		logger    *zap.Logger
 		val       string
 		statusCmd *redis.StatusCmd
+		tm        *data.TradeMain
+		bs        []byte
 	)
 
 	if logger, err = zap.NewProduction(); err != nil {
@@ -34,4 +38,12 @@ func main() {
 	}
 
 	sugar.Infof("key -> %s", val)
+
+	tm = &data.TradeMain{}
+	db.MysqlDB.First(tm)
+	if bs, err = jsoniter.Marshal(tm); err != nil {
+		sugar.Fatalln(err)
+	}
+
+	sugar.Info(string(bs))
 }
