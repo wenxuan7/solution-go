@@ -1,4 +1,5 @@
 CREATE TABLE `trade_main` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `sid` bigint unsigned DEFAULT 0,
   `tid` varchar(256) DEFAULT '',
   `company_id` bigint unsigned DEFAULT 0,
@@ -23,7 +24,6 @@ CREATE TABLE `trade_main` (
   `receiver_town` varchar(256) DEFAULT '',
   `receiver_detail` varchar(256) DEFAULT '',
   `receiver_code` varchar(256) DEFAULT '',
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted_at` timestamp DEFAULT NULL,
@@ -32,4 +32,23 @@ CREATE TABLE `trade_main` (
   index `idx_sid` (`sid`),
   index `idx_tid` (`company_id`, `tid`),
   index `idx_company_id_updated_at` (`company_id`, `updated_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `trade_has_many` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `sid` bigint unsigned DEFAULT '0',
+  `order_id` bigint unsigned DEFAULT '0',
+  `company_id` bigint unsigned DEFAULT '0',
+  `type` bigint unsigned DEFAULT '0',
+  `type_name` varchar(256) DEFAULT '',
+  `unit_id` bigint unsigned DEFAULT '0',
+  `unit_name` varchar(256) DEFAULT '',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_sid` (`sid`),
+  KEY `idx_oid` (`order_id`),
+  KEY `idx_company_id_type_unit_id` (`company_id`,`type`,`unit_id`),
+  KEY `idx_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

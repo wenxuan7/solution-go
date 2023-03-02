@@ -27,21 +27,12 @@ type mysqlConfig struct {
 
 func ConnectMysql() {
 	var (
-		err       error
-		bs        []byte
-		dia       gorm.Dialector
-		mysqlPool *sql.DB
-		logger    *zap.Logger
+		err    error
+		dia    gorm.Dialector
+		logger *zap.Logger
 	)
 
-	if bs, err = os.ReadFile("./db/config.json"); err != nil {
-		panic(err)
-	}
-
-	mysqlConf := &mysqlConfig{}
-	if err = jsoniter.Unmarshal(bs, mysqlConf); err != nil {
-		panic(err)
-	}
+	mysqlConf := getMysqlConfig()
 	url := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		mysqlConf.User, mysqlConf.Password, mysqlConf.Host, mysqlConf.Database)
 
@@ -59,11 +50,56 @@ func ConnectMysql() {
 			SingularTable: true, // 表名单数
 		},
 		CreateBatchSize: 100, // 批次创建最大值
+		NowFunc: func() time.Time {
+			return time.Now().Local()
+		},
 	}
 
 	if MysqlDB, err = gorm.Open(dia, gConf); err != nil {
 		panic(err)
 	}
+
+	// 初始化连接池参数
+	initConnectPool(MysqlDB, mysqlConf)
+
+	if logger, err = zap.NewProduction(); err != nil {
+		panic(err)
+	}
+	defer func() {
+		if err = logger.Sync(); err != nil {
+			panic(err)
+		}
+	}()
+	sugar := logger.Sugar()
+	sugar.Infof("Connect mysql URL: %s", url)
+}
+
+// getMysqlConfig 获取配置文件
+// 密码 mysql连接池大小 数据库名
+func getMysqlConfig() *mysqlConfig {
+	var (
+		bs  []byte
+		err error
+	)
+
+	if bs, err = os.ReadFile("./db/config.json"); err != nil {
+		panic(err)
+	}
+
+	mysqlConf := &mysqlConfig{}
+	if err = jsoniter.Unmarshal(bs, mysqlConf); err != nil {
+		panic(err)
+	}
+
+	return mysqlConf
+}
+
+// initConnectPool 初始化连接池参数
+func initConnectPool(db *gorm.DB, mysqlConf *mysqlConfig) {
+	var (
+		mysqlPool *sql.DB
+		err       error
+	)
 
 	if mysqlPool, err = MysqlDB.DB(); err != nil {
 		panic(err)
@@ -76,11 +112,4 @@ func ConnectMysql() {
 
 	// SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 	mysqlPool.SetConnMaxLifetime(time.Hour)
-
-	if logger, err = zap.NewProduction(); err != nil {
-		panic(err)
-	}
-	defer logger.Sync() // flushes buffer, if any
-	sugar := logger.Sugar()
-	sugar.Infof("Connect mysql URL: %s", url)
 }

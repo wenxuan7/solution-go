@@ -16,13 +16,18 @@ func main() {
 		val       string
 		statusCmd *redis.StatusCmd
 		tm        *data.TradeMain
+		thm       *data.TradeHasMany
 		bs        []byte
 	)
 
 	if logger, err = zap.NewProduction(); err != nil {
 		panic(err)
 	}
-	defer logger.Sync() // flushes buffer, if any
+	defer func() {
+		if err = logger.Sync(); err != nil {
+			panic(err)
+		}
+	}()
 	sugar := logger.Sugar()
 
 	db.ConnectMysql()
@@ -44,6 +49,7 @@ func main() {
 	if bs, err = jsoniter.Marshal(tm); err != nil {
 		sugar.Fatalln(err)
 	}
-
 	sugar.Info(string(bs))
+
+	sugar.Info(thm)
 }
