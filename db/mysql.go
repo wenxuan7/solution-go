@@ -101,7 +101,7 @@ func initConnectPool(db *gorm.DB, mysqlConf *mysqlConfig) {
 		err       error
 	)
 
-	if mysqlPool, err = MysqlDB.DB(); err != nil {
+	if mysqlPool, err = db.DB(); err != nil {
 		panic(err)
 	}
 	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.

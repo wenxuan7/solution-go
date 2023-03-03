@@ -2,7 +2,6 @@ package main
 
 import (
 	jsoniter "github.com/json-iterator/go"
-	"github.com/redis/go-redis/v9"
 	"github.com/solution-go/cache"
 	"github.com/solution-go/data"
 	"github.com/solution-go/db"
@@ -11,13 +10,12 @@ import (
 
 func main() {
 	var (
-		err       error
-		logger    *zap.Logger
-		val       string
-		statusCmd *redis.StatusCmd
-		tm        *data.TradeMain
-		thm       *data.TradeHasMany
-		bs        []byte
+		err    error
+		logger *zap.Logger
+		val    string
+		tm     *data.TradeMain
+		thm    *data.TradeHasMany
+		bs     []byte
 	)
 
 	if logger, err = zap.NewProduction(); err != nil {
@@ -33,8 +31,7 @@ func main() {
 	db.ConnectMysql()
 	cache.ConnectRedis()
 
-	statusCmd = cache.Rdb.Set(cache.Ctx, "key", "value", 0)
-	if err = statusCmd.Err(); err != nil {
+	if err = cache.Rdb.Set(cache.Ctx, "key", "value", 0).Err(); err != nil {
 		panic(err)
 	}
 
