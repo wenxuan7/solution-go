@@ -13,8 +13,6 @@ func main() {
 		err    error
 		logger *zap.Logger
 		val    string
-		tm     *data.TradeMain
-		thm    *data.TradeHasMany
 		bs     []byte
 	)
 
@@ -41,12 +39,10 @@ func main() {
 
 	sugar.Infof("key -> %s", val)
 
-	tm = &data.TradeMain{}
+	tm := &data.TradeMain{}
 	db.MysqlDB.First(tm)
 	if bs, err = jsoniter.Marshal(tm); err != nil {
 		sugar.Fatalln(err)
 	}
 	sugar.Info(string(bs))
-
-	sugar.Info(thm)
 }
