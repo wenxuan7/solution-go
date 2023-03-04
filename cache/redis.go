@@ -4,8 +4,10 @@ import (
 	"context"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
+	"github.com/solution-go/log"
 	"os"
+	"path"
+	"runtime"
 )
 
 var (
@@ -20,17 +22,19 @@ type config struct {
 
 func ConnectRedis() {
 	var (
-		bs     []byte
-		err    error
-		conf   = &config{}
-		logger *zap.Logger
+		bs      []byte
+		currDir string
+		err     error
+		conf    = &config{}
 	)
 
-	if bs, err = os.ReadFile("./cache/config.json"); err != nil {
-		panic(err)
+	_, currFile, _, _ := runtime.Caller(0)
+	currDir = path.Dir(currFile)
+	if bs, err = os.ReadFile(currDir + "/config.json"); err != nil {
+		log.Sugar.Panic(err)
 	}
 	if err = jsoniter.Unmarshal(bs, conf); err != nil {
-		panic(err)
+		log.Sugar.Panic()
 	}
 
 	Rdb = redis.NewClient(&redis.Options{
@@ -39,10 +43,5 @@ func ConnectRedis() {
 		DB:       0,             // use default DB
 	})
 
-	if logger, err = zap.NewProduction(); err != nil {
-		panic(err)
-	}
-	defer logger.Sync() // flushes buffer, if any
-	sugar := logger.Sugar()
-	sugar.Infof("Connect redis URL: %s", conf.Addr)
+	log.Sugar.Infof("Connect redis URL: %s", conf.Addr)
 }

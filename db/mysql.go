@@ -4,16 +4,18 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/json-iterator/go"
-	"go.uber.org/zap"
+	"github.com/solution-go/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 	"os"
+	"path"
+	"runtime"
 	"time"
 )
 
 var (
-	MysqlDB *gorm.DB
+	MysqlCli *gorm.DB
 )
 
 type mysqlConfig struct {
@@ -27,9 +29,8 @@ type mysqlConfig struct {
 
 func ConnectMysql() {
 	var (
-		err    error
-		dia    gorm.Dialector
-		logger *zap.Logger
+		err error
+		dia gorm.Dialector
 	)
 
 	mysqlConf := getMysqlConfig()
@@ -55,40 +56,33 @@ func ConnectMysql() {
 		},
 	}
 
-	if MysqlDB, err = gorm.Open(dia, gConf); err != nil {
-		panic(err)
+	if MysqlCli, err = gorm.Open(dia, gConf); err != nil {
+		log.Sugar.Panic(err)
 	}
 
 	// 初始化连接池参数
-	initConnectPool(MysqlDB, mysqlConf)
-
-	if logger, err = zap.NewProduction(); err != nil {
-		panic(err)
-	}
-	defer func() {
-		if err = logger.Sync(); err != nil {
-			panic(err)
-		}
-	}()
-	sugar := logger.Sugar()
-	sugar.Infof("Connect mysql URL: %s", url)
+	initConnectPool(MysqlCli, mysqlConf)
+	log.Sugar.Infof("Connect mysql URL: %s", url)
 }
 
 // getMysqlConfig 获取配置文件
 // 密码 mysql连接池大小 数据库名
 func getMysqlConfig() *mysqlConfig {
 	var (
-		bs  []byte
-		err error
+		bs      []byte
+		currDir string
+		err     error
 	)
 
-	if bs, err = os.ReadFile("./db/config.json"); err != nil {
-		panic(err)
+	_, currFile, _, _ := runtime.Caller(0)
+	currDir = path.Dir(currFile)
+	if bs, err = os.ReadFile(currDir + "/config.json"); err != nil {
+		log.Sugar.Panic(err)
 	}
 
 	mysqlConf := &mysqlConfig{}
 	if err = jsoniter.Unmarshal(bs, mysqlConf); err != nil {
-		panic(err)
+		log.Sugar.Panic(err)
 	}
 
 	return mysqlConf
@@ -102,7 +96,7 @@ func initConnectPool(db *gorm.DB, mysqlConf *mysqlConfig) {
 	)
 
 	if mysqlPool, err = db.DB(); err != nil {
-		panic(err)
+		log.Sugar.Panic(err)
 	}
 	// SetMaxIdleConns sets the maximum number of connections in the idle connection pool.
 	mysqlPool.SetMaxIdleConns(mysqlConf.MaxIdleConns)
