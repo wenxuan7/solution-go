@@ -2,7 +2,7 @@ package local
 
 import (
 	"github.com/allegro/bigcache"
-	"github.com/wenxuan7/solution/link"
+	"github.com/wenxuan7/solution/external"
 	"os"
 	"testing"
 	"time"
@@ -11,7 +11,7 @@ import (
 var s *Service
 
 func setup() {
-	link.Redis()
+	external.Redis()
 	var err error
 	s, err = NewService(true, "bigCacheChannel", bigcache.DefaultConfig(10*time.Minute))
 	if err != nil {
@@ -26,7 +26,7 @@ func tearDown() {
 		panic(err)
 	}
 	time.Sleep(time.Second)
-	err = link.RedisDb.Close()
+	err = external.RedisDb.Close()
 	if err != nil {
 		panic(err)
 	}

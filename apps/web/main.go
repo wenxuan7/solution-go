@@ -1,11 +1,26 @@
 package main
 
-import "github.com/wenxuan7/solution/link"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/wenxuan7/solution/external"
+)
 
 func main() {
 	// 连接mysql数据库
-	link.Mysql()
+	external.Mysql()
 	// 连接redis
-	link.Redis()
-	// 本地缓存 bigCache
+	external.Redis()
+	// gin
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
+	omsGroup := router.Group("/oms", func(c *gin.Context) {
+
+	})
+	// 配置
+	settingsController(omsGroup)
+	router.StaticFile("/favicon.ico", "./resources/favicon.ico")
+	err := router.Run(":8080")
+	if err != nil {
+		panic(err)
+	}
 }

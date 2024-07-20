@@ -2,14 +2,14 @@ package local
 
 import (
 	"context"
-	"encoding"
 	"errors"
 	"fmt"
 	"github.com/allegro/bigcache"
 	"github.com/redis/go-redis/v9"
 	"github.com/wenxuan7/solution/cache"
 	"github.com/wenxuan7/solution/cache/remote"
-	"github.com/wenxuan7/solution/link"
+	"github.com/wenxuan7/solution/external"
+	"github.com/wenxuan7/solution/utils"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -74,7 +74,7 @@ func NewService(wrapperCompanyId bool, channel string, config bigcache.Config) (
 func (s *Service) wrapper(ctx context.Context, k string) string {
 	sb := strings.Builder{}
 	if s.wrapperCompanyId {
-		sb.WriteString(strconv.Itoa(ctx.Value("companyId").(int)))
+		sb.WriteString(strconv.FormatUint(uint64(utils.GetCompanyId(ctx)), 10))
 		sb.WriteString("_")
 	}
 	sb.WriteString(k)
@@ -134,7 +134,7 @@ func (s *Service) Gets(ctx context.Context, ks []string) (map[string]string, err
 	return ret, nil
 }
 
-func (s *Service) Set(ctx context.Context, k string, v encoding.BinaryMarshaler, exp time.Duration) error {
+func (s *Service) Set(ctx context.Context, k string, v string, exp time.Duration) error {
 	err := s.remoteRW.Set(ctx, k, v, exp)
 	if err != nil {
 		return fmt.Errorf("local: fail remote to set: %w", err)
@@ -146,7 +146,7 @@ func (s *Service) Set(ctx context.Context, k string, v encoding.BinaryMarshaler,
 	return nil
 }
 
-func (s *Service) Sets(ctx context.Context, ks []string, vs []encoding.BinaryMarshaler, exps []time.Duration) error {
+func (s *Service) Sets(ctx context.Context, ks []string, vs []string, exps []time.Duration) error {
 	err := s.remoteRW.Sets(ctx, ks, vs, exps)
 	if err != nil {
 		return fmt.Errorf("local: fail remote to sets: %w", err)
@@ -189,7 +189,7 @@ func (s *Service) publish(ctx context.Context, ks []string) error {
 	for _, v := range ks {
 		wrapperKs = append(wrapperKs, s.wrapper(ctx, v))
 	}
-	_, err := link.RedisDb.Publish(ctx, s.channel, &wrapperKs).Result()
+	_, err := external.RedisDb.Publish(ctx, s.channel, &wrapperKs).Result()
 	if err != nil {
 		return fmt.Errorf("local: wrapper keys '%s', channel '%s': %w: %w", wrapperKs, s.channel, ErrPublishRedis, err)
 	}
@@ -197,7 +197,7 @@ func (s *Service) publish(ctx context.Context, ks []string) error {
 }
 
 func (s *Service) subscribe() {
-	sub := link.RedisDb.Subscribe(context.Background(), s.channel)
+	sub := external.RedisDb.Subscribe(context.Background(), s.channel)
 	defer func() {
 		err := sub.Close()
 		if err != nil {

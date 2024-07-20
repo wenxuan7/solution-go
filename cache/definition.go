@@ -2,7 +2,6 @@ package cache
 
 import (
 	"context"
-	"encoding"
 	"time"
 )
 
@@ -12,8 +11,8 @@ type Reader interface {
 }
 
 type Writer interface {
-	Set(ctx context.Context, k string, v encoding.BinaryMarshaler, exp time.Duration) error
-	Sets(ctx context.Context, ks []string, vs []encoding.BinaryMarshaler, exps []time.Duration) error
+	Set(ctx context.Context, k string, v string, exp time.Duration) error
+	Sets(ctx context.Context, ks []string, vs []string, exps []time.Duration) error
 	Deleter
 }
 

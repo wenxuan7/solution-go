@@ -2,9 +2,9 @@ package remote
 
 import (
 	"context"
-	"encoding"
 	"fmt"
-	"github.com/wenxuan7/solution/link"
+	"github.com/wenxuan7/solution/external"
+	"github.com/wenxuan7/solution/utils"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -32,7 +32,7 @@ func (s *Service) WithWrapper(wrapperEnv, wrapperCompany bool) *Service {
 func (s *Service) wrapper(ctx context.Context, k string) string {
 	sb := strings.Builder{}
 	if s.wrapperCompanyId {
-		sb.WriteString(strconv.Itoa(ctx.Value("companyId").(int)))
+		sb.WriteString(strconv.FormatUint(uint64(utils.GetCompanyId(ctx)), 10))
 		sb.WriteString("_")
 	}
 	if s.wrapperEnv {
@@ -44,16 +44,12 @@ func (s *Service) wrapper(ctx context.Context, k string) string {
 }
 
 // Set 单个set
-func (s *Service) Set(ctx context.Context, k string, v encoding.BinaryMarshaler, exp time.Duration) error {
+func (s *Service) Set(ctx context.Context, k string, v string, exp time.Duration) error {
 	if exp <= 0 {
 		return fmt.Errorf("remote: invalid expiration")
 	}
 	wrapperK := s.wrapper(ctx, k)
-	serialV, err := v.MarshalBinary()
-	if err != nil {
-		return fmt.Errorf("remote: fail MarshalBinary for '%v': %w", v, err)
-	}
-	_, err = link.RedisDb.Set(ctx, wrapperK, serialV, exp).Result()
+	_, err := external.RedisDb.Set(ctx, wrapperK, v, exp).Result()
 	if err != nil {
 		return fmt.Errorf("remote: failed to set value for wrapperK '%s': %w", wrapperK, err)
 	}
@@ -95,7 +91,7 @@ var luaSets = `
     `
 
 // Sets 批量set 失败后回滚已设置的key
-func (s *Service) Sets(ctx context.Context, ks []string, vs []encoding.BinaryMarshaler, exps []time.Duration) error {
+func (s *Service) Sets(ctx context.Context, ks []string, vs []string, exps []time.Duration) error {
 	l := len(ks)
 	if l > 100 || l != len(vs) || l != len(exps) {
 		return fmt.Errorf("remote: invalid length of ks")
@@ -111,11 +107,7 @@ func (s *Service) Sets(ctx context.Context, ks []string, vs []encoding.BinaryMar
 	}
 	values := make([]string, l)
 	for i, v := range vs {
-		data, err := v.MarshalBinary()
-		if err != nil {
-			return fmt.Errorf("remote: fail MarshalBinary for '%v': %w", v, err)
-		}
-		values[i] = string(data)
+		values[i] = v
 	}
 
 	// Prepare arguments for the Lua script
@@ -124,7 +116,7 @@ func (s *Service) Sets(ctx context.Context, ks []string, vs []encoding.BinaryMar
 		args = append(args, values[i], exps[i])
 	}
 
-	_, err := link.RedisDb.Eval(ctx, luaSets, keys, args...).Result()
+	_, err := external.RedisDb.Eval(ctx, luaSets, keys, args...).Result()
 	if err != nil {
 		return fmt.Errorf("remote: failed to set values for luaScript: %w", err)
 	}
@@ -134,7 +126,7 @@ func (s *Service) Sets(ctx context.Context, ks []string, vs []encoding.BinaryMar
 // Get 单个get
 func (s *Service) Get(ctx context.Context, k string) (string, error) {
 	wrapperK := s.wrapper(ctx, k)
-	ret, err := link.RedisDb.Get(ctx, wrapperK).Result()
+	ret, err := external.RedisDb.Get(ctx, wrapperK).Result()
 	if err != nil {
 		return "", fmt.Errorf("remote: failed to get value for wrapperK '%s': %w", wrapperK, err)
 	}
@@ -164,7 +156,7 @@ func (s *Service) Gets(ctx context.Context, ks []string) (map[string]string, err
 		wrapperKs[i] = s.wrapper(ctx, v)
 	}
 
-	ret, err := link.RedisDb.Eval(ctx, luaGets, wrapperKs).Result()
+	ret, err := external.RedisDb.Eval(ctx, luaGets, wrapperKs).Result()
 	if err != nil {
 		return nil, fmt.Errorf("remote: failed to get values for luaScript: %w", err)
 	}
@@ -183,7 +175,7 @@ func (s *Service) Gets(ctx context.Context, ks []string) (map[string]string, err
 // Del 单个删除
 func (s *Service) Del(ctx context.Context, k string) error {
 	wrapperK := s.wrapper(ctx, k)
-	_, err := link.RedisDb.Del(ctx, wrapperK).Result()
+	_, err := external.RedisDb.Del(ctx, wrapperK).Result()
 	if err != nil {
 		return fmt.Errorf("remote: failed to delete value for wrapperK '%s': %w", wrapperK, err)
 	}
@@ -225,7 +217,7 @@ func (s *Service) Deletes(ctx context.Context, ks []string) error {
 	for i, v := range ks {
 		wrapperKs[i] = s.wrapper(ctx, v)
 	}
-	_, err := link.RedisDb.Eval(ctx, luaDeletes, wrapperKs).Result()
+	_, err := external.RedisDb.Eval(ctx, luaDeletes, wrapperKs).Result()
 	if err != nil {
 		return fmt.Errorf("remote: failed to delete values for luaScript: %w", err)
 	}
@@ -268,7 +260,7 @@ func (s *Service) Lock(ctx context.Context, k string, exp time.Duration) error {
 		return fmt.Errorf("remote: invalid length of exp")
 	}
 	wrapperK := s.wrapper(ctx, k)
-	err := link.RedisDb.Eval(ctx, luaLock, []string{wrapperK}, exp, 1).Err()
+	err := external.RedisDb.Eval(ctx, luaLock, []string{wrapperK}, exp, 1).Err()
 	if err != nil {
 		return fmt.Errorf("remote: failed to setNx for wrapperK '%s': %w", wrapperK, err)
 	}
@@ -311,7 +303,7 @@ func (s *Service) Locks(ctx context.Context, ks []string, exp time.Duration) err
 		wrapperKs[i] = s.wrapper(ctx, v)
 	}
 
-	_, err := link.RedisDb.Eval(ctx, luaLocks, wrapperKs, exp, 1).Result()
+	_, err := external.RedisDb.Eval(ctx, luaLocks, wrapperKs, exp, 1).Result()
 	if err != nil {
 		return fmt.Errorf("remote: failed to lock values for luaScript: %w", err)
 	}

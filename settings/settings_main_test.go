@@ -1,29 +1,30 @@
-package remote
+package settings
 
 import (
 	"github.com/wenxuan7/solution/external"
-	"log/slog"
 	"os"
 	"testing"
 )
 
-var s = NewService()
+var s *Service
 
 func setup() {
+	external.Mysql()
 	external.Redis()
-	s.WithWrapper(false, true)
+
+	var err error
+	s, err = NewServiceWithLCache()
+	if err != nil {
+		panic(err)
+	}
 }
 
-func tearDown() {
-	err := external.RedisDb.Close()
-	if err != nil {
-		slog.Error("redis close failed", "error", err)
-	}
+func teardown() {
 }
 
 func TestMain(m *testing.M) {
 	setup()
+	defer teardown()
 	code := m.Run()
-	tearDown()
 	os.Exit(code)
 }

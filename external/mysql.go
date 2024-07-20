@@ -1,4 +1,4 @@
-package link
+package external
 
 import "strings"
 
@@ -14,6 +14,6 @@ func dsn() string {
 	sb.WriteString(mysqlCon.username)
 	sb.WriteString(":")
 	sb.WriteString(mysqlCon.password)
-	sb.WriteString("@tcp(127.0.0.1:3306)/raycloud_erp?charset=utf8&parseTime=True&loc=Local")
+	sb.WriteString("@tcp(127.0.0.1:3306)/solution_data?charset=utf8&parseTime=True&loc=Local")
 	return sb.String()
 }

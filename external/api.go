@@ -1,7 +1,6 @@
-package link
+package external
 
 import (
-	"database/sql"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -9,7 +8,7 @@ import (
 	"time"
 )
 
-var MysqlDb *sql.DB
+var MysqlDb *gorm.DB
 
 func Mysql() {
 	gormCon := &gorm.Config{
@@ -17,7 +16,8 @@ func Mysql() {
 			SingularTable: true, // 使用单数表名
 		},
 	}
-	conn, err := gorm.Open(mysql.New(mysql.Config{
+	var err error
+	MysqlDb, err = gorm.Open(mysql.New(mysql.Config{
 		DSN:                       dsn(), // DSN data source name
 		DefaultStringSize:         256,   // string 类型字段的默认长度
 		DisableDatetimePrecision:  true,  // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
@@ -29,14 +29,14 @@ func Mysql() {
 		panic(err)
 	}
 
-	MysqlDb, err := conn.DB()
+	pool, err := MysqlDb.DB()
 	if err != nil {
 		panic(err)
 	}
 
-	MysqlDb.SetMaxIdleConns(10)
-	MysqlDb.SetMaxOpenConns(100)
-	MysqlDb.SetConnMaxLifetime(time.Hour)
+	pool.SetMaxIdleConns(10)
+	pool.SetMaxOpenConns(100)
+	pool.SetConnMaxLifetime(time.Hour)
 }
 
 var RedisDb *redis.Client

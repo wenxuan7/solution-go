@@ -1,4 +1,4 @@
-package link
+package external
 
 type redisConf struct {
 	Addr     string
