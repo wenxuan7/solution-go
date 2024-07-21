@@ -14,10 +14,14 @@ func GetCompanyId(ctx context.Context) uint {
 	return ctx.Value("companyId").(uint)
 }
 
-func WithTraceId(ctx context.Context) (context.Context, error) {
+func WithTraceId(ctx context.Context, traceId string) context.Context {
+	return context.WithValue(ctx, "traceId", traceId)
+}
+
+func WithAutoTraceId(ctx context.Context) (context.Context, error) {
 	traceId, err := uuid.NewUUID()
 	if err != nil {
-		return ctx, fmt.Errorf("utils: fail to uuid.NewUUID in WithTraceId: %w", err)
+		return ctx, fmt.Errorf("utils: fail to uuid.NewUUID in WithAutoTraceId: %w", err)
 	}
 	return context.WithValue(ctx, "traceId", traceId.String()), nil
 }

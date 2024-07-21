@@ -40,7 +40,7 @@ func (r *resp) withData(data any) *resp {
 }
 
 func getCtx(c *gin.Context) context.Context {
-	ctx, err := utils.WithTraceId(context.Background())
+	ctx, err := utils.WithAutoTraceId(context.Background())
 	if err != nil {
 		slog.Error("生成traceId错误", "error", err)
 		c.JSON(http.StatusBadRequest, newFailResp("").withError("业务错误"))
