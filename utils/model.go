@@ -11,6 +11,6 @@ type Model struct {
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
-	HasSub    bool           `json:"has_sub"`
-	TableNo   uint           `json:"table_no"`
+	HasNo     bool           `json:"has_no"`
+	No        uint           `json:"no"`
 }

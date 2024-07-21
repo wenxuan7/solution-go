@@ -5,11 +5,15 @@ import (
 	"github.com/wenxuan7/solution/external"
 )
 
-func main() {
+func setup() {
 	// 连接mysql数据库
 	external.Mysql()
 	// 连接redis
 	external.Redis()
+}
+
+func main() {
+	setup()
 	// gin
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
