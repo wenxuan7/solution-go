@@ -1,14 +1,14 @@
 module github.com/wenxuan7/solution
 
-go 1.22
+go 1.23
 
 require (
 	github.com/allegro/bigcache v1.2.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
-	github.com/redis/go-redis/v9 v9.6.0
+	github.com/redis/go-redis/v9 v9.6.1
 	github.com/wenxuan7/oms-grpc v1.0.4
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.11
 )
